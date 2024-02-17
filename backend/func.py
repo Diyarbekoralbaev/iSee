@@ -25,3 +25,23 @@ async def generate_image_description(image_path, prompt, lang='en'):
     except Exception as e:
         print(str(e))
         return "An error occurred while generating the description."
+    
+
+async def chat_with_image(image_path, prompt, lang='en'):
+    try:
+        img = PIL.Image.open(image_path)
+        model = genai.GenerativeModel('gemini-pro-vision')
+        response = model.generate_content([prompt, img], stream=True)
+        response.resolve()
+        if lang != 'en':
+            translator = await GoogleTranslator(
+                    source="en", target=lang).translate(str(response.text))
+            return translator
+        else:
+            return response.text    
+
+    except Exception as e:
+        print(str(e))
+        return "An error occurred while generating the description."
+
+        

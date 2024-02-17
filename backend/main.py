@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from func import generate_image_description
+from func import generate_image_description, chat_with_image
 from uuid import uuid4
 import os
 import shutil
@@ -48,4 +48,19 @@ Otherwise just decribe key elements of image.
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         os.remove(save_image_path)
-    return {"description": description}
+    return {"iSee": description}
+
+
+@app.post("/chat_with_image/")
+async def create_upload_file(file: UploadFile = File(...), prompt: str = "", lang: str = "en"):
+    save_image_path = f"img/{uuid4()}.jpg"
+    prompt = f"{prompt}. Say in short terms"
+    with open(save_image_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    try:
+        description = await chat_with_image(save_image_path, prompt, lang)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        os.remove(save_image_path)
+    return {"iSee": description}
