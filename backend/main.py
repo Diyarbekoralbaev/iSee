@@ -12,7 +12,7 @@ async def root():
 
 
 @app.post("/generate_image_description/")
-async def create_upload_file(file: UploadFile = File(...), prompt: str = "", lang: str = "en"):
+async def create_upload_file(file: UploadFile = File(...), lang: str = "en"):
     save_image_path = f"img/{uuid4()}.jpg"
     default_prompt = f"""
 if detected traffic light follow this:    
@@ -46,21 +46,31 @@ Otherwise just decribe key elements of image.
         description = await generate_image_description(save_image_path, default_prompt, lang)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        os.remove(save_image_path)
-    return {"iSee": description}
+    return {
+        "iSee": description,
+        "photo": f"{save_image_path}"
+    }
 
 
 @app.post("/chat_with_image/")
-async def create_upload_file(file: UploadFile = File(...), prompt: str = "", lang: str = "en"):
-    save_image_path = f"img/{uuid4()}.jpg"
+async def create_upload_file(prompt: str = "", lang: str = "en", photo: str = ""):
     prompt = f"{prompt}. Say in short terms"
-    with open(save_image_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
     try:
-        description = await chat_with_image(save_image_path, prompt, lang)
+        description = await chat_with_image(photo, prompt, lang)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        os.remove(save_image_path)
-    return {"iSee": description}
+    return {
+        "iSee": description,
+        "photo": f"{photo}"
+    }
+
+
+@app.delete("/delete_image/")
+async def delete_image(photo: str = ""):
+    try:
+        os.remove(photo)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "message": "Image deleted"
+    }
