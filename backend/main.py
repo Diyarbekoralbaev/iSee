@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from func import generate_image_description, chat_with_image
+from cy_func import generate_image_description, chat_with_image
 from uuid import uuid4
 import os
 import shutil
