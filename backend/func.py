@@ -1,6 +1,5 @@
-import google.generativeai as genai
-import PIL.Image
 import aiohttp
+import base64
 
 class GoogleTranslator:
     def __init__(self, source='auto', target='en'):
@@ -30,21 +29,49 @@ class GoogleTranslator:
 # Or use `os.getenv('GOOGLE_API_KEY')` to fetch an environment variable.
 GOOGLE_API_KEY='AIzaSyCSxLtLUncg6qirOaW4mBt2mjcjLUP5aUM'
 
-genai.configure(api_key=GOOGLE_API_KEY)
-
 
 async def generate_image_description(image_path, prompt, lang='en'):
     try:
-        img = PIL.Image.open(image_path)
-        model = genai.GenerativeModel('gemini-pro-vision')
-        response = model.generate_content([prompt, img], stream=True)
-        response.resolve()
-        if lang != 'en':
-            translator = await GoogleTranslator(
-                    source="en", target=lang).translate(str(response.text))
-            return translator
-        else:
-            return response.text    
+        with open(image_path, "rb") as img_file:
+            image_data = base64.b64encode(img_file.read()).decode("utf-8")
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt},
+                            {
+                                "inline_data": {
+                                    "mime_type": "image/jpeg",
+                                    "data": image_data,
+                                }
+                            },
+                        ]
+                    }
+                ]
+            }
+            api_key = "AIzaSyCSxLtLUncg6qirOaW4mBt2mjcjLUP5aUM"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key={api_key}"
+            headers = {"Content-Type": "application/json"}
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=payload) as response:
+                    response_data = await response.json()
+
+                    candidates = response_data.get("candidates", [])
+                    if candidates:
+                        content = candidates[0].get("content", {})
+                        parts = content.get("parts", [])
+                        text_result = [part.get("text", "") for part in parts]
+                        generated_text = " ".join(text_result)
+
+                        if lang != 'en':
+                            translator = await GoogleTranslator(
+                                source="en", target=lang).translate(str(generated_text))
+                            return translator
+                        else:
+                            return generated_text
+                    else:
+                        return "An error occurred while generating the description."
 
     except Exception as e:
         print(str(e))
@@ -53,16 +80,46 @@ async def generate_image_description(image_path, prompt, lang='en'):
 
 async def chat_with_image(image_path, prompt, lang='en'):
     try:
-        img = PIL.Image.open(image_path)
-        model = genai.GenerativeModel('gemini-pro-vision')
-        response = model.generate_content([prompt, img], stream=True)
-        response.resolve()
-        if lang != 'en':
-            translator = await GoogleTranslator(
-                    source="en", target=lang).translate(str(response.text))
-            return translator
-        else:
-            return response.text    
+        with open(image_path, "rb") as img_file:
+            image_data = base64.b64encode(img_file.read()).decode("utf-8")
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt},
+                            {
+                                "inline_data": {
+                                    "mime_type": "image/jpeg",
+                                    "data": image_data,
+                                }
+                            },
+                        ]
+                    }
+                ]
+            }
+            api_key = "AIzaSyCSxLtLUncg6qirOaW4mBt2mjcjLUP5aUM"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key={api_key}"
+            headers = {"Content-Type": "application/json"}
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=payload) as response:
+                    response_data = await response.json()
+
+                    candidates = response_data.get("candidates", [])
+                    if candidates:
+                        content = candidates[0].get("content", {})
+                        parts = content.get("parts", [])
+                        text_result = [part.get("text", "") for part in parts]
+                        generated_text = " ".join(text_result)
+
+                        if lang != 'en':
+                            translator = await GoogleTranslator(
+                                source="en", target=lang).translate(str(generated_text))
+                            return translator
+                        else:
+                            return generated_text
+                    else:
+                        return "An error occurred while generating the description."
 
     except Exception as e:
         print(str(e))
