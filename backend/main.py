@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from func import generate_image_description, chat_with_image
+from func import generate_image_description, text_to_speech
 from uuid import uuid4
 import os
 import shutil
@@ -56,13 +56,22 @@ Otherwise just decribe key elements of image.
 async def create_upload_file(prompt: str = "", lang: str = "en", photo: str = ""):
     prompt = f"{prompt}. Say in short terms"
     try:
-        description = await chat_with_image(photo, prompt, lang)
+        description = await generate_image_description(photo, prompt, lang)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {
         "iSee": description,
         "photo": f"{photo}"
     }
+
+
+@app.post("/text_to_speech/")
+async def text_2_speech(text: str = ""):
+    try:
+        speech = await text_to_speech(text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return speech
 
 
 @app.delete("/delete_image/")
