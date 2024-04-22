@@ -72,7 +72,7 @@ async def generate_image_description(image_path, prompt, lang='en'):
                         else:
                             return generated_text
                     else:
-                        return "An error occurred while generating the description."
+                        return response_data
 
     except Exception as e:
         print(str(e))
